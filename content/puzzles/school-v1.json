@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "version": "school-v1",
+  "title": "School Life",
+  "language": "en",
+  "grid": [
+    "###G######",
+    "##LESSON##",
+    "###E##P###",
+    "BOOK##E###",
+    "###S##N###",
+    "####DESK##",
+    "##########",
+    "##########",
+    "##########",
+    "##########"
+  ],
+  "entries": [
+    {
+      "id": "lesson",
+      "row": 1,
+      "col": 2,
+      "direction": "across",
+      "answer": "LESSON",
+      "clue_en": "A period of learning or teaching in a class.",
+      "clue_id": "Masa atau waktu pembelajaran di kelas."
+    },
+    {
+      "id": "book",
+      "row": 3,
+      "col": 0,
+      "direction": "across",
+      "answer": "BOOK",
+      "clue_en": "Bound pages used for reading or studying.",
+      "clue_id": "Kumpulan halaman bertuliskan untuk dibaca."
+    },
+    {
+      "id": "desk",
+      "row": 5,
+      "col": 4,
+      "direction": "across",
+      "answer": "DESK",
+      "clue_en": "A piece of furniture with a flat top used for study.",
+      "clue_id": "Meja tempat siswa belajar dan menulis."
+    },
+    {
+      "id": "geeks",
+      "row": 0,
+      "col": 3,
+      "direction": "down",
+      "answer": "GEEKS",
+      "clue_en": "Enthusiastic and knowledgeable learners.",
+      "clue_id": "Siswa yang sangat tekun dan menyukai ilmu."
+    },
+    {
+      "id": "opens",
+      "row": 1,
+      "col": 6,
+      "direction": "down",
+      "answer": "OPENS",
+      "clue_en": "Unlocks or begins the school day.",
+      "clue_id": "Membuka kegiatan sekolah."
+    }
+  ]
+}

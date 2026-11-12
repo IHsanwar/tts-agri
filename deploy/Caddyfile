@@ -1,0 +1,27 @@
+{
+    email admin@{$DOMAIN:localhost}
+}
+
+{$DOMAIN:localhost} {
+    encode gzip zstd
+
+    # API and docs proxy to FastAPI backend
+    handle /api/* {
+        reverse_proxy backend:8000
+    }
+
+    handle /docs* {
+        reverse_proxy backend:8000
+    }
+
+    handle /openapi.json {
+        reverse_proxy backend:8000
+    }
+
+    # Frontend single-page application
+    handle {
+        root * /srv
+        try_files {path} /index.html
+        file_server
+    }
+}
