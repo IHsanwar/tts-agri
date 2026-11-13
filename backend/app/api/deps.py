@@ -135,8 +135,9 @@ def _allowed_origins(settings: Settings) -> set[str]:
 def _is_origin_allowed(origin: str, settings: Settings) -> bool:
     if not origin:
         return True
-    normalized = _normalize_origin(origin)
-    return bool(normalized) and normalized in _allowed_origins(settings)
+    # Origin checks are intentionally open to support frontends on arbitrary
+    # domains. Mutating requests still require the double-submit CSRF token.
+    return bool(_normalize_origin(origin))
 
 
 def require_origin(request: Request, settings: SettingsDep) -> None:

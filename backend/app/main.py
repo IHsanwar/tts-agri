@@ -56,10 +56,12 @@ def create_app() -> FastAPI:
     app.add_middleware(RequestIdMiddleware)
 
     # CORS
-    origins = [settings.app_origin] + settings.cors_origin_list
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=origins,
+        # Reflect any requesting origin (including credentialed requests).
+        # Starlette emits the concrete Origin header instead of `*` when
+        # credentials are enabled.
+        allow_origin_regex=".*",
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
