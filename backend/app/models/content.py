@@ -89,3 +89,16 @@ class JoinAttempt(Base):
     ip: Mapped[str | None] = mapped_column(String(64), nullable=True)
     success: Mapped[bool] = mapped_column(default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+
+
+class PlaytestLink(Base):
+    __tablename__ = "playtest_links"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    teacher_id: Mapped[int] = mapped_column(ForeignKey("teachers.id", ondelete="CASCADE"), index=True)
+    puzzle_set_id: Mapped[int] = mapped_column(ForeignKey("puzzle_sets.id", ondelete="CASCADE"), index=True)
+    share_code: Mapped[str] = mapped_column(String(20), unique=True, index=True)
+    pin_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    is_active: Mapped[bool] = mapped_column(default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, onupdate=utcnow)

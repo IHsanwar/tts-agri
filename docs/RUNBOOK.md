@@ -69,3 +69,4 @@ Jika guru lupa kata sandi:
 ```bash
 docker compose exec backend python /app/scripts/reset_teacher_password.py "guru@sekolah.sch.id" "PasswordBaru123!"
 ```
+

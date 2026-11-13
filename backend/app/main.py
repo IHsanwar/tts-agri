@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+import traceback
 import uuid
 from typing import Any
 
@@ -8,11 +10,11 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
-from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.api.auth import router as auth_router
 from app.api.deps import SessionDep
 from app.api.play import router as play_router
+from app.api.playtest import router as playtest_router
 from app.api.public import router as public_router
 from app.api.teacher import router as teacher_router
 from app.core.config import get_settings
@@ -20,7 +22,7 @@ from app.core.errors import AppError, envelope
 from app.core.time import utcnow
 
 
-class RequestIdAndLimitMiddleware:
+class RequestIdMiddleware:
     def __init__(self, app: Any) -> None:
         self.app = app
 
@@ -51,7 +53,7 @@ def create_app() -> FastAPI:
         redoc_url=None,
     )
 
-    # app.add_middleware(RequestIdAndLimitMiddleware)
+    app.add_middleware(RequestIdMiddleware)
 
     # CORS
     origins = [settings.app_origin] + settings.cors_origin_list
@@ -73,39 +75,64 @@ def create_app() -> FastAPI:
 
     @app.exception_handler(RequestValidationError)
     async def validation_error_handler(_request: Request, exc: RequestValidationError) -> JSONResponse:
-        return JSONResponse(
-            status_code=422,
-            content={
-                "error": {
-                    "code": "validation_error",
-                    "message": "Format data tidak valid.",
-                    "details": exc.errors(),
-                }
-            },
-        )
+        error_body: dict[str, Any] = {
+            "error": {
+                "code": "validation_error",
+                "message": "Format data tidak valid.",
+                "details": exc.errors(),
+            }
+        }
+        if settings.app_debug:
+            error_body["error"]["exception_type"] = type(exc).__name__
+        return JSONResponse(status_code=422, content=error_body)
 
     @app.exception_handler(Exception)
-    async def unhandled_exception_handler(_request: Request, exc: Exception) -> JSONResponse:
-        return JSONResponse(
-            status_code=500,
-            content={
-                "error": {
-                    "code": "server_error",
-                    "message": "Terjadi kesalahan internal pada server.",
-                    "details": {},
-                }
-            },
+    async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+        req_id = request.headers.get("x-request-id", "")
+        logging.getLogger("uvicorn.error").exception(
+            "Unhandled exception [request_id=%s] %s: %s",
+            req_id,
+            type(exc).__name__,
+            exc,
         )
+        error_body: dict[str, Any] = {
+            "error": {
+                "code": "server_error",
+                "message": "Terjadi kesalahan internal pada server.",
+                "details": {},
+            }
+        }
+        if settings.app_debug:
+            error_body["error"] = {
+                "code": "server_error",
+                "message": str(exc) or repr(exc),
+                "details": {},
+                "exception_type": type(exc).__name__,
+                "traceback": traceback.format_exc(),
+                "path": str(request.url),
+                "method": request.method,
+                "request_id": req_id,
+            }
+        else:
+            error_body["error"]["request_id"] = req_id
+        return JSONResponse(status_code=500, content=error_body)
 
     # Base API endpoints
     @app.get("/api/health")
     async def health(session: SessionDep) -> dict:
-        db_status = "ok"
         try:
             await session.execute(text("SELECT 1"))
-        except Exception:
-            db_status = "error"
-        return {"status": "ok", "db": db_status}
+            return {
+                "status": "ok",
+                "db": "ok",
+                "error": None,
+            }
+        except Exception as e:
+            return {
+                "status": "error",
+                "db": "error",
+                "error": str(e) if settings.app_debug else "Database connection failed",
+            }
 
     @app.get("/api/time")
     async def get_time() -> dict:
@@ -119,6 +146,7 @@ def create_app() -> FastAPI:
     app.include_router(auth_router, prefix="/api")
     app.include_router(teacher_router, prefix="/api")
     app.include_router(play_router, prefix="/api")
+    app.include_router(playtest_router, prefix="/api")
     app.include_router(public_router, prefix="/api")
 
     return app

@@ -76,3 +76,4 @@ async def get_public_leaderboard(
         "is_final": comp.status == "closed",
         "leaderboard": entries,
     }
+

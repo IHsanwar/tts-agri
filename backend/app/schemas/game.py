@@ -20,3 +20,7 @@ class PlayEvent(BaseModel):
 
 class PlayEventsRequest(BaseModel):
     events: list[PlayEvent] = Field(min_length=1, max_length=20)
+
+
+class PlaytestJoinRequest(BaseModel):
+    player_name: str | None = Field(None, max_length=120)

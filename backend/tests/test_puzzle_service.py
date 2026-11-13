@@ -60,3 +60,4 @@ def test_invalid_puzzles():
         "entries": [],
     })
     assert any("Grid hanya boleh huruf" in e for e in errs)
+

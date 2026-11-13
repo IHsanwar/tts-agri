@@ -72,3 +72,4 @@ Dokumen ini menjelaskan struktur data puzzle teka-teki silang (crossword) untuk 
 ### Warning (Peringatan, Tidak Memblokir)
 - Teks petunjuk mengandung kata jawaban.
 - Sel putih hanya dilalui oleh satu arah saja (unchecked cell).
+

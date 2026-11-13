@@ -7,6 +7,7 @@ from app.models.content import (
     CompetitionGroup,
     Group,
     JoinAttempt,
+    PlaytestLink,
     PuzzleSet,
 )
 from app.models.game import GameEvent, GameSession, ScoreLedger, SessionEntry, SessionHint
@@ -19,6 +20,7 @@ __all__ = [
     "GameSession",
     "Group",
     "JoinAttempt",
+    "PlaytestLink",
     "PuzzleSet",
     "ScoreLedger",
     "SessionEntry",

@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 import os
-import tempfile
 from collections.abc import AsyncIterator
-from pathlib import Path
 
 import pytest
 import pytest_asyncio
@@ -22,36 +20,31 @@ import app.models  # noqa: F401
 
 @pytest_asyncio.fixture
 async def client() -> AsyncIterator[AsyncClient]:
-    with tempfile.TemporaryDirectory() as tmpdir:
-        db_path = Path(tmpdir) / "test.sqlite"
-        test_db_url = f"sqlite+aiosqlite:///{db_path}"
-        test_engine = create_async_engine(
-            test_db_url,
-            echo=False,
-            connect_args={"check_same_thread": False},
-        )
-        test_sessionmaker = async_sessionmaker(test_engine, class_=AsyncSession, expire_on_commit=False)
+    settings = get_settings()
+    test_engine = create_async_engine(
+        settings.database_url,
+        echo=False,
+        pool_pre_ping=True,
+    )
+    test_sessionmaker = async_sessionmaker(test_engine, class_=AsyncSession, expire_on_commit=False)
 
-        async with test_engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
+    app = create_app()
 
-        app = create_app()
+    from app.api.deps import get_session
 
-        from app.api.deps import get_session
+    async def override_get_session() -> AsyncIterator[AsyncSession]:
+        async with test_sessionmaker() as session:
+            yield session
 
-        async def override_get_session() -> AsyncIterator[AsyncSession]:
-            async with test_sessionmaker() as session:
-                yield session
+    app.dependency_overrides[get_session] = override_get_session
 
-        app.dependency_overrides[get_session] = override_get_session
+    transport = ASGITransport(app=app)
+    async with AsyncClient(
+        transport=transport,
+        base_url="http://localhost:5173",
+        headers={"origin": "http://localhost:5173"},
+    ) as ac:
+        yield ac
 
-        transport = ASGITransport(app=app)
-        async with AsyncClient(
-            transport=transport,
-            base_url="http://localhost:5173",
-            headers={"origin": "http://localhost:5173"},
-        ) as ac:
-            yield ac
-
-        app.dependency_overrides.clear()
-        await test_engine.dispose()
+    app.dependency_overrides.clear()
+    await test_engine.dispose()

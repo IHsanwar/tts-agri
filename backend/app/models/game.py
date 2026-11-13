@@ -14,10 +14,18 @@ class GameSession(Base):
     __tablename__ = "game_sessions"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    competition_id: Mapped[int] = mapped_column(
-        ForeignKey("competitions.id", ondelete="CASCADE"), index=True
+    competition_id: Mapped[int | None] = mapped_column(
+        ForeignKey("competitions.id", ondelete="CASCADE"), index=True, nullable=True
     )
-    group_id: Mapped[int] = mapped_column(ForeignKey("groups.id", ondelete="CASCADE"), index=True)
+    group_id: Mapped[int | None] = mapped_column(
+        ForeignKey("groups.id", ondelete="CASCADE"), index=True, nullable=True
+    )
+    puzzle_set_id: Mapped[int | None] = mapped_column(
+        ForeignKey("puzzle_sets.id"), index=True, nullable=True
+    )
+    player_name: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    playtest_token_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    playtest_csrf_token_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
     status: Mapped[str] = mapped_column(String(20), default="active")
     started_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
     deadline_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)

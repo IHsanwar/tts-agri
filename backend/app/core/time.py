@@ -4,14 +4,15 @@ from datetime import UTC, datetime
 
 
 def utcnow() -> datetime:
-    return datetime.now(UTC)
+    """Return current UTC time as naive datetime for seamless MySQL DateTime compatibility."""
+    return datetime.now(UTC).replace(tzinfo=None)
 
 
 def now_ms() -> int:
-    return int(utcnow().timestamp() * 1000)
+    return int(datetime.now(UTC).timestamp() * 1000)
 
 
 def to_iso(dt: datetime) -> str:
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=UTC)
-    return dt.astimezone(UTC).isoformat()
+    return dt.isoformat()

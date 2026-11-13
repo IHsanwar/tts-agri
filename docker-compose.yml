@@ -5,13 +5,14 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
-      - TTS_DATABASE_URL=sqlite+aiosqlite:////data/tts.sqlite
+      - TTS_DB_HOST=${TTS_DB_HOST:-host.docker.internal}
+      - TTS_DB_PORT=${TTS_DB_PORT:-3306}
+      - TTS_DB_USER=${TTS_DB_USER:-root}
+      - TTS_DB_PASSWORD=${TTS_DB_PASSWORD:-}
+      - TTS_DB_NAME=${TTS_DB_NAME:-ttsdulu}
       - TTS_APP_ORIGIN=https://${DOMAIN:-localhost}
       - TTS_COOKIE_SECURE=true
       - TTS_INVITE_CODE=${INVITE_CODE:-change-me-invite-code}
-    volumes:
-      - ./data:/data
-      - ./backups:/backups
     expose:
       - "8000"
     healthcheck:

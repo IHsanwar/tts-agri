@@ -59,3 +59,4 @@ Panduan penggunaan aplikasi untuk Guru dan Siswa.
    - *Buka 1 Huruf*: Mengurangi 3 poin, membuka huruf pada kotak yang dipilih.
    - *Buka Seluruh Kata*: Mengurangi 10 poin, membuka seluruh kata dan mengubah status kata menjadi berbantuan.
 5. Selesaikan seluruh kata sebelum timer berakhir untuk mendapatkan bonus +20 poin!
+

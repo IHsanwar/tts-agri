@@ -9,7 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import Settings, get_settings
-from app.core.cookies import clear_teacher_cookies, set_teacher_cookies
+from app.core.cookies import clear_teacher_cookies, set_teacher_cookies, set_playtest_cookies
 from app.core.errors import AuthError, CsrfError, ForbiddenError, NotFoundError, RateLimitError
 from app.core.security import constant_time_eq, generate_csrf_token, generate_token, hash_token
 from app.core.time import utcnow
@@ -82,9 +82,27 @@ def require_write_method(request: Request, settings: SettingsDep) -> None:
 CsrfDep = Annotated[None, Depends(require_write_method)]
 
 
+def _is_origin_allowed(origin: str, settings: Settings) -> bool:
+    if not origin:
+        return True
+    origin_clean = origin.rstrip("/")
+    allowed = set()
+    for base in [settings.app_origin, settings.public_app_url] + settings.cors_origin_list:
+        if base:
+            b = base.strip().rstrip("/")
+            allowed.add(b)
+            if "localhost" in b:
+                allowed.add(b.replace("localhost", "127.0.0.1"))
+            elif "127.0.0.1" in b:
+                allowed.add(b.replace("127.0.0.1", "localhost"))
+    # Always allow local dev origins
+    allowed.update(["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:8000", "http://127.0.0.1:8000"])
+    return any(origin_clean.startswith(a) for a in allowed)
+
+
 def require_origin(request: Request, settings: SettingsDep) -> None:
     origin = request.headers.get("origin") or request.headers.get("referer") or ""
-    if origin and not origin.startswith(settings.app_origin):
+    if origin and not _is_origin_allowed(origin, settings):
         raise ForbiddenError("Akses dari origin tidak diizinkan.")
 
 
@@ -206,3 +224,69 @@ def require_group_csrf(
 
 
 GroupCsrfDep = Annotated[None, Depends(require_group_csrf)]
+
+
+async def start_playtest_session(
+    response: Response,
+    session: AsyncSession,
+    gs: Any,
+    settings: Settings,
+) -> tuple[str, str]:
+    raw_token = generate_token()
+    csrf_token = generate_csrf_token()
+    gs.playtest_token_hash = hash_token(raw_token)
+    gs.playtest_csrf_token_hash = hash_token(csrf_token)
+    await session.commit()
+
+    token_cookie_val = f"{gs.id}:{raw_token}"
+    ttl_seconds = int(timedelta(hours=settings.session_ttl_hours_playtest).total_seconds())
+    set_playtest_cookies(response, token_cookie_val, csrf_token, ttl_seconds)
+    return token_cookie_val, csrf_token
+
+
+async def get_current_playtest_session(
+    request: Request,
+    session: SessionDep,
+    settings: SettingsDep,
+) -> Any:
+    from app.models import GameSession
+
+    token = request.cookies.get(settings.playtest_cookie)
+    if not token or ":" not in token:
+        raise AuthError("Sesi playtest tidak ditemukan.")
+    try:
+        gs_id_str, raw_token = token.split(":", 1)
+        gs_id = int(gs_id_str)
+    except Exception:
+        raise AuthError("Format token sesi playtest tidak valid.")
+
+    gs = (
+        await session.execute(
+            select(GameSession).where(GameSession.id == gs_id)
+        )
+    ).scalar_one_or_none()
+    if not gs or not gs.playtest_token_hash or gs.playtest_token_hash != hash_token(raw_token):
+        raise AuthError("Sesi playtest tidak valid.")
+
+    return gs
+
+
+PlaytestSessionDep = Annotated[Any, Depends(get_current_playtest_session)]
+
+
+def require_playtest_csrf(
+    request: Request,
+    settings: SettingsDep,
+) -> None:
+    if request.method in ("GET", "HEAD", "OPTIONS"):
+        return
+    origin = request.headers.get("origin") or request.headers.get("referer") or ""
+    if origin and not _is_origin_allowed(origin, settings):
+        raise ForbiddenError("Akses dari origin tidak diizinkan.")
+    csrf_cookie = request.cookies.get(settings.playtest_csrf_cookie)
+    csrf_header = request.headers.get("x-csrf-token") or request.headers.get("x-tts-csrf")
+    if not csrf_cookie or not csrf_header or not constant_time_eq(csrf_cookie, csrf_header):
+        raise CsrfError("Token CSRF tidak valid.")
+
+
+PlaytestCsrfDep = Annotated[None, Depends(require_playtest_csrf)]

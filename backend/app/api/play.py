@@ -272,6 +272,7 @@ async def get_play_state(
 async def play_events(
     body: PlayEventsRequest,
     group_session: GroupSessionDep,
+    session: SessionDep,
     _: GroupCsrfDep,
 ) -> dict[str, Any]:
     cg, gs = group_session
@@ -529,9 +530,9 @@ async def play_events(
                 cg.completed_at = now
 
         gs.last_event_at = now
+        await write_s.flush()
+        score = await current_score(write_s, gs.id)
 
-    # Get updated score
-    score = await current_score(session, gs.id)
     return {"results": results, "score": score, "status": gs.status}
 
 
@@ -610,3 +611,4 @@ async def get_play_result(
         "completed_at": gs.completed_at.isoformat() if gs.completed_at else None,
         "duration_seconds": dur_sec,
     }
+

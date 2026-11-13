@@ -55,7 +55,7 @@ backups/
 .idea/
 *.swp
 *.swo
-
+.kilo
 # OS
 Thumbs.db
 Desktop.ini

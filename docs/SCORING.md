@@ -37,3 +37,4 @@ Platform TTS Arena menggunakan sistem penilaian **server-authoritative** dan **d
   3. Urutan Abjad Nama Grup (`Group Name ASC`)
 - **Diskualifikasi / Pembatalan (`voided`)**:
   Sesi yang dibatalkan oleh guru (`void`) dikeluarkan dari perhitungan leaderboard dan diberi tanda status diskualifikasi.
+
