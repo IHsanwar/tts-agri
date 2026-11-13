@@ -22,11 +22,19 @@ export class ApiError extends Error {
   }
 }
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
+
 export async function apiFetch<T = any>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const url = endpoint.startsWith('http') ? endpoint : `/api${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+  let url: string;
+  if (endpoint.startsWith('http')) {
+    url = endpoint;
+  } else {
+    const path = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    url = API_BASE_URL ? `${API_BASE_URL}${path}` : `/api${path}`;
+  }
 
   const headers = new Headers(options.headers || {});
   headers.set('Accept', 'application/json');
