@@ -3,6 +3,10 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
     {
+      "source": "/api/(.*)",
+      "destination": "https://tts-api.ihsanwardhana.web.id/api/$1"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
