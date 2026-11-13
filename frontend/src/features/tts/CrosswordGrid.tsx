@@ -114,7 +114,7 @@ export const CrosswordGrid: React.FC<CrosswordGridProps> = ({
       <div
         style={
           {
-            '--s': `min(64px, calc((100vw - 64px - ${(state.cols - 1) * 6}px) / ${Math.max(state.cols, 1)}))`,
+            '--s': `min(64px, calc((100vw - 64px - ${(state.cols - 1) * 6}px) / ${Math.max(state.cols, 1)}), calc((100dvh - 300px - ${(state.rows - 1) * 6}px) / ${Math.max(state.rows, 1)}))`,
             display: 'grid',
             gridTemplateColumns: `repeat(${state.cols}, ${cellSize})`,
             gridAutoRows: cellSize,

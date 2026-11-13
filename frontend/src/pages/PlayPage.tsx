@@ -446,7 +446,7 @@ export const PlayPage: React.FC<{ mode?: 'competition' | 'playtest' }> = ({ mode
 
   // 3. Active Crossword Game View
   return (
-    <div className="min-h-screen bg-page-gradient flex flex-col relative">
+    <div className="min-h-screen bg-page-gradient flex flex-col relative lg:h-dvh lg:min-h-0 lg:overflow-hidden">
       {/* Background decorations */}
       {DECOR_EMOJIS.map((d, i) => (
         <span
@@ -471,7 +471,7 @@ export const PlayPage: React.FC<{ mode?: 'competition' | 'playtest' }> = ({ mode
         <Confetti key={confettiTrigger} onDone={() => setConfettiTrigger(0)} />
       )}
 
-      <div className="relative z-10">
+      <div className="relative z-10 flex min-h-0 flex-1 flex-col">
         <ScoreboardHeader
           competitionName={metaName}
           groupName={subName}
@@ -489,10 +489,10 @@ export const PlayPage: React.FC<{ mode?: 'competition' | 'playtest' }> = ({ mode
           onFinish={isPlaytest ? handleFinishGame : undefined}
         />
 
-        <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <main className="flex-1 min-h-0 max-w-screen-2xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start lg:items-stretch lg:overflow-hidden">
           {/* Left: Crossword Grid card */}
           <div
-            className="lg:col-span-8 flex flex-col items-center justify-center min-h-0 lg:min-h-[560px]"
+            className="lg:col-span-7 flex min-h-0 flex-col items-center justify-center lg:h-full"
             style={{
               background: 'var(--card)',
               borderRadius: '28px',
@@ -510,7 +510,7 @@ export const PlayPage: React.FC<{ mode?: 'competition' | 'playtest' }> = ({ mode
           </div>
 
           {/* Right: Clue Rail */}
-          <div className="lg:col-span-4 h-[620px] lg:h-[680px]">
+          <div className="lg:col-span-5 h-[620px] lg:h-full lg:min-h-0">
             <ClueRail
               entries={state.entries}
               activeEntryId={state.activeEntryId}

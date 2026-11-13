@@ -198,6 +198,21 @@
     --focus: #ffd93d;
   }
 
+  :root[data-theme="light"] {
+    color-scheme: light;
+    --page-bg: linear-gradient(160deg, #fff6df 0%, #e5f3ff 100%);
+    --page-soft: #fff6df;
+    --card: #ffffff;
+    --text: #1f2a44;
+    --text-sec: #586987;
+    --edge: #d6deee;
+    --cell-bg: #ffffff;
+    --cell-text: #1f2a44;
+    --hover-soft: #f4f8ff;
+    --track-soft: #eef3ff;
+    --focus: #1f2a44;
+  }
+
   *,
   *::before,
   *::after {
