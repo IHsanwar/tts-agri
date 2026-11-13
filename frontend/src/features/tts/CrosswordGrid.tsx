@@ -27,7 +27,11 @@ export const CrosswordGrid: React.FC<CrosswordGridProps> = ({
 
   // Keep focus on hidden input for desktop keyboard capture
   useEffect(() => {
-    if (!disabled && hiddenInputRef.current) {
+    if (
+      !disabled &&
+      hiddenInputRef.current &&
+      window.matchMedia('(pointer: fine)').matches
+    ) {
       hiddenInputRef.current.focus();
     }
   }, [disabled, state.activeCell]);
@@ -81,11 +85,16 @@ export const CrosswordGrid: React.FC<CrosswordGridProps> = ({
   const progress = totalEntries > 0 ? (solvedCount / totalEntries) * 100 : 0;
 
   const cellSize = 'var(--s, 58px)';
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
   return (
     <div
       className="relative flex flex-col items-center select-none outline-none w-full"
-      onClick={() => hiddenInputRef.current?.focus()}
+      onClick={() => {
+        if (window.matchMedia('(pointer: fine)').matches) {
+          hiddenInputRef.current?.focus();
+        }
+      }}
     >
       {/* Hidden input to capture physical keyboard focus */}
       <input
@@ -93,7 +102,6 @@ export const CrosswordGrid: React.FC<CrosswordGridProps> = ({
         type="text"
         className="absolute opacity-0 pointer-events-none w-0 h-0"
         onKeyDown={handleKeyDown}
-        autoFocus
         tabIndex={0}
         aria-hidden="true"
       />
@@ -106,7 +114,7 @@ export const CrosswordGrid: React.FC<CrosswordGridProps> = ({
       <div
         style={
           {
-            '--s': 'min(58px, 11vw)',
+            '--s': `min(64px, calc((100vw - 64px - ${(state.cols - 1) * 6}px) / ${Math.max(state.cols, 1)}))`,
             display: 'grid',
             gridTemplateColumns: `repeat(${state.cols}, ${cellSize})`,
             gridAutoRows: cellSize,
@@ -164,7 +172,12 @@ export const CrosswordGrid: React.FC<CrosswordGridProps> = ({
               <button
                 key={`${r}-${c}`}
                 type="button"
-                onClick={() => dispatch({ type: 'SELECT_CELL', row: r, col: c })}
+                onClick={() => {
+                  dispatch({ type: 'SELECT_CELL', row: r, col: c });
+                  if (window.matchMedia('(pointer: fine)').matches) {
+                    hiddenInputRef.current?.focus();
+                  }
+                }}
                 style={
                   {
                     width: cellSize,
@@ -238,10 +251,76 @@ export const CrosswordGrid: React.FC<CrosswordGridProps> = ({
         toastKey={toast?.key ?? 0}
       />
 
+      {/* Touch keyboard for phones and tablets */}
+      <div
+        className="mt-5 grid w-full max-w-xl grid-cols-7 gap-2 sm:hidden"
+        aria-label="Papan ketik huruf"
+      >
+        {letters.map((letter) => (
+          <button
+            key={letter}
+            type="button"
+            disabled={disabled}
+            onClick={(event) => {
+              event.stopPropagation();
+              dispatch({ type: 'TYPE_LETTER', letter, onWordFilled });
+            }}
+            className="rounded-xl font-display font-bold active:translate-y-0.5 disabled:opacity-50"
+            style={{
+              minHeight: '44px',
+              background: 'var(--cell-bg)',
+              color: 'var(--cell-text)',
+              boxShadow: '0 3px 0 var(--cell-edge)',
+              fontSize: '18px',
+              touchAction: 'manipulation',
+            }}
+            aria-label={`Huruf ${letter}`}
+          >
+            {letter}
+          </button>
+        ))}
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={(event) => {
+            event.stopPropagation();
+            dispatch({ type: 'BACKSPACE' });
+          }}
+          className="col-span-2 rounded-xl font-display font-bold disabled:opacity-50"
+          style={{ minHeight: '48px', background: 'var(--coral-soft)', color: 'var(--text)', fontSize: '16px', touchAction: 'manipulation' }}
+        >
+          Hapus ⌫
+        </button>
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={(event) => {
+            event.stopPropagation();
+            dispatch({ type: 'TOGGLE_DIRECTION' });
+          }}
+          className="col-span-3 rounded-xl font-display font-bold disabled:opacity-50"
+          style={{ minHeight: '48px', background: 'var(--blue-soft)', color: 'var(--text)', fontSize: '16px', touchAction: 'manipulation' }}
+        >
+          Ganti arah ↕
+        </button>
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={(event) => {
+            event.stopPropagation();
+            dispatch({ type: 'MOVE_CURSOR', key: 'ArrowRight' });
+          }}
+          className="col-span-2 rounded-xl font-display font-bold disabled:opacity-50"
+          style={{ minHeight: '48px', background: 'var(--yellow)', color: 'var(--text)', fontSize: '16px', touchAction: 'manipulation' }}
+        >
+          Pindah →
+        </button>
+      </div>
+
       {/* Keyboard help text */}
       <div
-        className="mt-1 text-center"
-        style={{ fontSize: '13px', color: 'var(--text-sec)' }}
+        className="mt-3 hidden text-center sm:block"
+        style={{ fontSize: '15px', color: 'var(--text-sec)' }}
       >
         Ketik huruf A–Z · Panah untuk pindah · Tab ganti kata · Enter ganti arah
       </div>

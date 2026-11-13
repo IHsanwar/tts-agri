@@ -492,11 +492,11 @@ export const PlayPage: React.FC<{ mode?: 'competition' | 'playtest' }> = ({ mode
         <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* Left: Crossword Grid card */}
           <div
-            className="lg:col-span-7 flex flex-col items-center justify-center min-h-[500px]"
+            className="lg:col-span-8 flex flex-col items-center justify-center min-h-0 lg:min-h-[560px]"
             style={{
               background: 'var(--card)',
               borderRadius: '28px',
-              padding: '22px',
+              padding: 'clamp(12px, 2.5vw, 28px)',
               boxShadow: '0 6px 0 var(--edge)',
             }}
           >
@@ -510,7 +510,7 @@ export const PlayPage: React.FC<{ mode?: 'competition' | 'playtest' }> = ({ mode
           </div>
 
           {/* Right: Clue Rail */}
-          <div className="lg:col-span-5 h-[560px]">
+          <div className="lg:col-span-4 h-[620px] lg:h-[680px]">
             <ClueRail
               entries={state.entries}
               activeEntryId={state.activeEntryId}

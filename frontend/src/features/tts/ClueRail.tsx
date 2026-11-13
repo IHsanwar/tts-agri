@@ -126,7 +126,7 @@ export const ClueRail: React.FC<ClueRailProps> = ({
                     <div
                       className="leading-snug"
                       style={{
-                        fontSize: '16px',
+                        fontSize: '18px',
                         fontWeight: 700,
                         color: itemColor,
                         textDecoration: isAnswered ? 'line-through' : 'none',
@@ -138,7 +138,7 @@ export const ClueRail: React.FC<ClueRailProps> = ({
                     </div>
                     <div
                       className="italic mt-0.5"
-                      style={{ fontSize: '13px', color: 'var(--text-sec)' }}
+                      style={{ fontSize: '16px', color: 'var(--text-sec)', lineHeight: 1.4 }}
                     >
                       {entry.clue_id}
                     </div>
@@ -201,11 +201,11 @@ export const ClueRail: React.FC<ClueRailProps> = ({
 
   return (
     <div
-      className="h-full flex flex-col gap-4"
+      className="h-full min-h-0 flex flex-col gap-4"
       style={{
         background: 'var(--card)',
         borderRadius: '28px',
-        padding: '22px',
+        padding: 'clamp(14px, 2.5vw, 24px)',
         boxShadow: '0 6px 0 var(--edge)',
       }}
     >
