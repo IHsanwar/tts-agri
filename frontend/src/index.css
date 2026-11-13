@@ -204,13 +204,23 @@
     --page-soft: #fff6df;
     --card: #ffffff;
     --text: #1f2a44;
-    --text-sec: #586987;
-    --edge: #d6deee;
+    --text-sec: #3d4a66;
+    --edge: #c9d3e6;
     --cell-bg: #ffffff;
     --cell-text: #1f2a44;
-    --hover-soft: #f4f8ff;
-    --track-soft: #eef3ff;
+    --hover-soft: #e2eaf6;
+    --track-soft: #e2e9f5;
     --focus: #1f2a44;
+    /* Darker accents for better contrast against light backgrounds */
+    --blue: #3b82f6;
+    --blue-soft: #bcdcff;
+    --coral: #f05252;
+    --coral-soft: #ffd0d0;
+    --orange: #e8890a;
+    --mint: #4caf50;
+    --mint-soft: #b8e6be;
+    --yellow: #ffc91f;
+    --brown: #2a1e00;
   }
 
   *,
