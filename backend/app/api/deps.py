@@ -3,13 +3,19 @@ from __future__ import annotations
 from collections.abc import AsyncIterator
 from datetime import timedelta
 from typing import Annotated, Any
+from urllib.parse import urlsplit
 
 from fastapi import Cookie, Depends, Header, Request, Response
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import Settings, get_settings
-from app.core.cookies import clear_teacher_cookies, set_teacher_cookies, set_playtest_cookies
+from app.core.cookies import (
+    clear_teacher_cookies,
+    set_group_cookies,
+    set_playtest_cookies,
+    set_teacher_cookies,
+)
 from app.core.errors import AuthError, CsrfError, ForbiddenError, NotFoundError, RateLimitError
 from app.core.security import constant_time_eq, generate_csrf_token, generate_token, hash_token
 from app.core.time import utcnow
@@ -70,7 +76,7 @@ def require_write_method(request: Request, settings: SettingsDep) -> None:
         return
     # Origin check
     origin = request.headers.get("origin") or request.headers.get("referer") or ""
-    if origin and not origin.startswith(settings.app_origin):
+    if origin and not _is_origin_allowed(origin, settings):
         raise ForbiddenError("Akses dari origin tidak diizinkan.")
     cookie_name = settings.teacher_csrf_cookie
     csrf_cookie = request.cookies.get(cookie_name)
@@ -82,22 +88,55 @@ def require_write_method(request: Request, settings: SettingsDep) -> None:
 CsrfDep = Annotated[None, Depends(require_write_method)]
 
 
+def _normalize_origin(value: str) -> str:
+    """Reduce an Origin/Referer value to a canonical scheme://host[:port].
+
+    Browsers send a bare origin (``https://host``), but a Referer carries a full
+    path and the configured settings may carry a trailing slash. Comparing the
+    normalized forms avoids both false rejections and prefix-based bypasses such
+    as ``https://app.example.com.evil.tld``.
+    """
+    raw = (value or "").strip().rstrip("/")
+    if not raw:
+        return ""
+    try:
+        parts = urlsplit(raw if "://" in raw else f"//{raw}")
+    except ValueError:
+        return raw.lower()
+    scheme = (parts.scheme or "").lower()
+    netloc = parts.netloc.lower()
+    if not netloc:
+        return raw.lower()
+    return f"{scheme}://{netloc}" if scheme else netloc
+
+
+def _allowed_origins(settings: Settings) -> set[str]:
+    allowed: set[str] = set()
+    for base in [settings.app_origin, settings.public_app_url] + settings.cors_origin_list:
+        normalized = _normalize_origin(base)
+        if normalized:
+            allowed.add(normalized)
+            if "localhost" in normalized:
+                allowed.add(normalized.replace("localhost", "127.0.0.1"))
+            elif "127.0.0.1" in normalized:
+                allowed.add(normalized.replace("127.0.0.1", "localhost"))
+    # Always allow local dev origins
+    allowed.update(
+        [
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+            "http://localhost:8000",
+            "http://127.0.0.1:8000",
+        ]
+    )
+    return allowed
+
+
 def _is_origin_allowed(origin: str, settings: Settings) -> bool:
     if not origin:
         return True
-    origin_clean = origin.rstrip("/")
-    allowed = set()
-    for base in [settings.app_origin, settings.public_app_url] + settings.cors_origin_list:
-        if base:
-            b = base.strip().rstrip("/")
-            allowed.add(b)
-            if "localhost" in b:
-                allowed.add(b.replace("localhost", "127.0.0.1"))
-            elif "127.0.0.1" in b:
-                allowed.add(b.replace("127.0.0.1", "localhost"))
-    # Always allow local dev origins
-    allowed.update(["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:8000", "http://127.0.0.1:8000"])
-    return any(origin_clean.startswith(a) for a in allowed)
+    normalized = _normalize_origin(origin)
+    return bool(normalized) and normalized in _allowed_origins(settings)
 
 
 def require_origin(request: Request, settings: SettingsDep) -> None:
@@ -214,7 +253,7 @@ def require_group_csrf(
     if request.method in ("GET", "HEAD", "OPTIONS"):
         return
     origin = request.headers.get("origin") or request.headers.get("referer") or ""
-    if origin and not origin.startswith(settings.app_origin):
+    if origin and not _is_origin_allowed(origin, settings):
         raise ForbiddenError("Akses dari origin tidak diizinkan.")
     cookie_name = settings.group_csrf_cookie
     csrf_cookie = request.cookies.get(cookie_name)

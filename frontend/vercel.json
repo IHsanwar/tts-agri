@@ -3,7 +3,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://tts-api.ihsanwardhana.web.id/api/:path*"
+      "destination": "/index.html"
     }
   ]
 }

@@ -22,7 +22,42 @@ export class ApiError extends Error {
   }
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
+const RAW_API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
+
+/**
+ * Resolve the API base URL.
+ *
+ * Session auth here is cookie-based (httpOnly session cookie + a JS-readable
+ * CSRF cookie, double-submit). Browsers only attach and store those cookies
+ * when the request is same-origin with the page, so an absolute
+ * ``VITE_API_BASE_URL`` pointing at another host silently breaks login: the
+ * login call succeeds but the cookie never lands, and the next ``/auth/me``
+ * answers "Sesi guru tidak ditemukan."
+ *
+ * Same-origin is what both deployments already provide — the Vite dev server
+ * proxies ``/api`` and ``vercel.json`` rewrites ``/api/*`` to the backend — so
+ * a cross-origin base is ignored instead of producing a half-broken session.
+ */
+function resolveApiBaseUrl(): string {
+  const raw = RAW_API_BASE_URL.trim().replace(/\/+$/, '');
+  if (!raw || typeof window === 'undefined') {
+    return raw;
+  }
+  try {
+    const configured = new URL(raw, window.location.origin);
+    if (configured.origin !== window.location.origin) {
+      console.warn(
+        `[api] VITE_API_BASE_URL (${configured.origin}) is cross-origin; falling back to same-origin /api so session and CSRF cookies work.`
+      );
+      return '';
+    }
+    return configured.pathname.replace(/\/+$/, '');
+  } catch {
+    return '';
+  }
+}
+
+const API_BASE_URL = resolveApiBaseUrl();
 
 export async function apiFetch<T = any>(
   endpoint: string,
@@ -65,7 +100,9 @@ export async function apiFetch<T = any>(
   const response = await fetch(url, {
     ...options,
     headers,
-    credentials: 'same-origin',
+    // Session cookies are httpOnly and set for the API origin; "include" also
+    // covers the (unexpected) case of an absolute same-site endpoint.
+    credentials: 'include',
   });
 
   if (!response.ok) {

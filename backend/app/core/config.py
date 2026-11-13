@@ -3,7 +3,7 @@ from __future__ import annotations
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import AliasChoices, Field
+from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 _CORE_DIR = Path(__file__).resolve().parent
@@ -79,6 +79,18 @@ class Settings(BaseSettings):
         default=3306,
         validation_alias=AliasChoices("TTS_DB_PORT", "DB_PORT", "db_port"),
     )
+
+    @field_validator("app_origin", "app_url", mode="after")
+    @classmethod
+    def _strip_trailing_slash(cls, value: str) -> str:
+        """Normalize configured URLs to a bare scheme://host[:port].
+
+        Origin checks and CORS compare these values against browser-sent
+        origins, which never carry a trailing slash. Leaving one in place made
+        ``origin.startswith(app_origin)`` reject every real browser origin, so
+        normalize at the edge instead of relying on each call site.
+        """
+        return value.strip().rstrip("/")
 
     @property
     def database_url(self) -> str:
