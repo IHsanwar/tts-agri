@@ -100,7 +100,7 @@
     --shadow-coral: #f5a3a3;
 
     /* Letter cells stay LIGHT in both themes */
-    --cell-bg: #ffffff;
+    --cell-bg: #e9eef6;
     --cell-text: #1f2a44;
 
     /* Text on accent fills */
@@ -206,8 +206,9 @@
     --text: #1f2a44;
     --text-sec: #3d4a66;
     --edge: #c9d3e6;
-    --cell-bg: #ffffff;
+    --cell-bg: #e9eef6;
     --cell-text: #1f2a44;
+    --cell-edge: #b8c5da;
     --hover-soft: #e2eaf6;
     --track-soft: #e2e9f5;
     --focus: #1f2a44;
