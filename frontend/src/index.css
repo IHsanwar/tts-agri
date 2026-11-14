@@ -183,6 +183,13 @@
 
     --white: 36 44 82;
 
+    /* Soft accent variants — darkened for dark mode so light text stays readable */
+    --blue-soft: #1e3a5f;
+    --coral-soft: #5c2020;
+    --mint-soft: #1a3d2a;
+    --yellow: #b8860b;
+    --orange: #c97a0a;
+
     --page-bg: linear-gradient(160deg, #1b2140 0%, #14304f 100%);
     --page-soft: #1b2140;
     --card: #242c52;

@@ -8,6 +8,7 @@ import { HintDialog } from '../features/tts/HintDialog';
 import { Confetti } from '../features/tts/Confetti';
 import { ResultModal, ResultData } from '../features/tts/ResultModal';
 import { ToastType } from '../features/tts/Toast';
+import { ThemeToggle } from '../features/theme/ThemeToggle';
 import { apiFetch, ApiError } from '../api/client';
 import { OutboxQueue } from '../lib/outbox';
 
@@ -472,6 +473,7 @@ export const PlayPage: React.FC<{ mode?: 'competition' | 'playtest' }> = ({ mode
       )}
 
       <div className="relative z-10 flex min-h-0 flex-1 flex-col">
+        <div className="relative">
         <ScoreboardHeader
           competitionName={metaName}
           groupName={subName}
@@ -488,6 +490,8 @@ export const PlayPage: React.FC<{ mode?: 'competition' | 'playtest' }> = ({ mode
           onCheckActiveWord={activeEntry && activeEntry.status === 'unsolved' ? handleCheckActiveWord : undefined}
           onFinish={isPlaytest ? handleFinishGame : undefined}
         />
+        <ThemeToggle className="absolute top-2 right-2" />
+        </div>
 
         <main className="flex-1 min-h-0 max-w-screen-2xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start lg:items-stretch lg:overflow-hidden">
           {/* Left: Crossword Grid card */}
